@@ -235,7 +235,7 @@ def main():
                 )
                 st.markdown(response)
                 
-                # Evaluate response quality if enabled
+                # Evaluate response qual ity if enabled
                 if enable_evaluation and RAGAS_AVAILABLE:
                     with st.spinner("Evaluating response quality..."):
                         evaluation_scores = evaluate_response_quality(
