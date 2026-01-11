@@ -1,0 +1,29 @@
+2026-01-11 19:29:37,774 - INFO - Initializing ChromaDB Embedding Pipeline...
+2026-01-11 19:29:39,125 - INFO - Collection Statistics:
+2026-01-11 19:29:39,138 - INFO - error: No documents in collection
+2026-01-11 19:36:12,828 - INFO - Initializing ChromaDB Embedding Pipeline...
+2026-01-11 19:36:13,328 - INFO - Starting text data processing with update mode: skip
+2026-01-11 19:36:13,328 - INFO - Scanning directory: data\apollo13
+2026-01-11 19:36:13,329 - INFO - Found 1 text files in apollo13
+2026-01-11 19:36:13,329 - INFO - Total text files to process: 1
+2026-01-11 19:36:13,329 - INFO - Files by mission:
+2026-01-11 19:36:13,330 - INFO -   apollo_13: 1 files
+2026-01-11 19:36:13,331 - ERROR - Error processing text file data\apollo13\AS13_TEC.txt: 'utf-8' codec can't decode byte 0x92 in position 27388: invalid start byte
+2026-01-11 19:36:13,331 - INFO - ============================================================
+2026-01-11 19:36:13,331 - INFO - PROCESSING COMPLETE
+2026-01-11 19:36:13,331 - INFO - ============================================================
+2026-01-11 19:36:13,331 - INFO - Files processed: 1
+2026-01-11 19:36:13,331 - INFO - Total chunks created: 0
+2026-01-11 19:36:13,332 - INFO - Documents added to collection: 0
+2026-01-11 19:36:13,332 - INFO - Documents updated in collection: 0
+2026-01-11 19:36:13,332 - INFO - Documents skipped (already exist): 0
+2026-01-11 19:36:13,332 - INFO - Errors: 0
+2026-01-11 19:36:13,332 - INFO - Processing time: 0.00 seconds
+2026-01-11 19:36:13,332 - INFO - 
+Mission breakdown:
+2026-01-11 19:36:13,332 - INFO -   apollo_13: 1 files, 0 chunks
+2026-01-11 19:36:13,332 - INFO -     Added: 0, Updated: 0, Skipped: 0
+2026-01-11 19:36:13,335 - INFO - 
+Collection: nasa_space_missions_text
+2026-01-11 19:36:13,335 - INFO - Total documents in collection: 0
+2026-01-11 19:36:13,335 - INFO - Pipeline completed successfully!
