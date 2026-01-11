@@ -1,0 +1,4 @@
+ragas
+chromadb
+openai
+steamlit
