@@ -2,3 +2,7 @@ ragas
 chromadb
 openai
 steamlit
+rouge_score
+sacrebleu
+rapidfuzz
+langchain_openai

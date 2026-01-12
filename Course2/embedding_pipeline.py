@@ -61,7 +61,7 @@ class ChromaEmbeddingPipelineTextOnly:
             chunk_overlap: Overlap between chunks
         """
         # TODO: Initialize OpenAI client
-        self.openai_client = OpenAI(api_key=openai_api_key)
+        self.openai_client = OpenAI(api_key=openai_api_key,timeout=60)
 
         # TODO: Store configuration parameters
         self.embedding_model = embedding_model
@@ -75,9 +75,16 @@ class ChromaEmbeddingPipelineTextOnly:
             settings=Settings(anonymized_telemetry=False)
         )
 
-        # TODO: Create or get collection
+        # TODO: Create OpenAI embedding function for consistency with rag_client
+        embedding_function = OpenAIEmbeddingFunction(
+            api_key=openai_api_key,
+            model_name=embedding_model
+        )
+
+        # TODO: Create or get collection with embedding function
         self.collection = self.chroma_client.get_or_create_collection(
-            name=collection_name
+            name=collection_name,
+            embedding_function=embedding_function
         )
     
     def chunk_text(self, text: str, metadata: Dict[str, Any]) -> List[Tuple[str, Dict[str, Any]]]:
@@ -104,6 +111,8 @@ class ChromaEmbeddingPipelineTextOnly:
 
         # TODO: Implement chunking logic with overlap
         while start < len(text):
+            print(f"[chunk_text] start={start}")
+
             end = start + self.chunk_size
 
             # TODO: Try to break at sentence boundaries
@@ -119,7 +128,13 @@ class ChromaEmbeddingPipelineTextOnly:
             meta["chunk_index"] = index
             chunks.append((chunk_text, meta))
 
-            start = end - self.chunk_overlap
+            #start = end - self.chunk_overlap
+
+            next_start = end - self.chunk_overlap
+            if next_start <= start:
+                next_start = start + self.chunk_size
+            start = next_start
+
             index += 1
 
         for _, meta in chunks:
@@ -159,7 +174,10 @@ class ChromaEmbeddingPipelineTextOnly:
         """
         try:
             # Get new embedding
+            print(f"[EMB] about to call embeddings: doc_id={doc_id}, len={len(text)}")
             embedding = self.get_embedding(text)
+            print(f"[EMB] embeddings returned: doc_id={doc_id}, dim={len(embedding)}")
+
             
             # Update the document
             self.collection.update(
@@ -281,10 +299,17 @@ class ChromaEmbeddingPipelineTextOnly:
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            
-            if not content.strip():
+        except UnicodeDecodeError:
+            with open(file_path, 'r', encoding='latin-1') as f:
+                content = f.read()
+
+        content = content.replace("\x00", "").replace("\x1a", "")
+    
+        print(f"Processing text file: {file_path} (size: {len(content)} characters)")
+        try:    
+            if len(content) < 20:
                 return []
-            
+            print(f"  Content preview: {content[:100].replace(chr(10), ' ')}...")
             # Enhanced metadata extraction
             metadata = {
                 'source': file_path.stem,
@@ -298,7 +323,11 @@ class ChromaEmbeddingPipelineTextOnly:
                 'processed_timestamp': datetime.now().isoformat()
             }
             
-            return self.chunk_text(content, metadata)
+            print(">>> before chunk_text")
+            chunks = self.chunk_text(content, metadata)
+            print(f">>> after chunk_text, chunks={len(chunks)}")
+            return chunks
+
             
         except Exception as e:
             logger.error(f"Error processing text file {file_path}: {e}")
@@ -444,7 +473,10 @@ class ChromaEmbeddingPipelineTextOnly:
             self.delete_documents_by_source(file_path.stem)
 
         # TODO: Process documents in batches
+        my_i=0
         for text, metadata in documents:
+            my_i+=1
+            print(f"Processing document {my_i} / {len(documents)}")
             # TODO: Generate document ID
             doc_id = self.generate_document_id(file_path, metadata)
             # TODO: Check if exists

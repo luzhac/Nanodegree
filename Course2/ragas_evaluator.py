@@ -13,28 +13,33 @@ try:
 except ImportError:
     RAGAS_AVAILABLE = False
 
-def evaluate_response_quality(question: str, answer: str, contexts: List[str]) -> Dict[str, float]:
+def evaluate_response_quality(question: str, answer: str, contexts: List[str], openai_api_key: Optional[str] = None) -> Dict[str, float]:
     """Evaluate response quality using RAGAS metrics"""
     if not RAGAS_AVAILABLE:
         return {"error": "RAGAS not available"}
     
+    # Get API key from parameter or environment variable
+    import os
+    api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return {"error": "OpenAI API key not provided"}
+    
      # TODO: Create evaluator LLM with model gpt-3.5-turbo
     evaluator_llm = LangchainLLMWrapper(
-        ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+        ChatOpenAI(model="gpt-3.5-turbo", temperature=0, api_key=api_key)
     )
 
     # TODO: Create evaluator_embeddings with model test-embedding-3-small
     evaluator_embeddings = LangchainEmbeddingsWrapper(
-        OpenAIEmbeddings(model="text-embedding-3-small")
+        OpenAIEmbeddings(model="text-embedding-3-small", api_key=api_key)
     )
 
     # TODO: Define an instance for each metric to evaluate
+    # Note: Only using metrics that don't require reference answers
+    # RougeScore, BleuScore, and NonLLMContextPrecisionWithReference require reference data
     metrics = [
         ResponseRelevancy(llm=evaluator_llm, embeddings=evaluator_embeddings),
         Faithfulness(llm=evaluator_llm),
-        RougeScore(),
-        BleuScore(),
-        NonLLMContextPrecisionWithReference(),
     ]
 
     # TODO: Evaluate the response using the metrics
@@ -44,10 +49,28 @@ def evaluate_response_quality(question: str, answer: str, contexts: List[str]) -
         retrieved_contexts=contexts,
     )
 
-    results = evaluate(
-        samples=[sample],
-        metrics=metrics,
-    )
+    # Use the correct RAGAS API - newer versions use dataset parameter
+    try:
+        # Try with dataset parameter (newer RAGAS versions)
+        from ragas import EvaluationDataset
+        dataset = EvaluationDataset(samples=[sample])
+        results = evaluate(
+            dataset=dataset,
+            metrics=metrics,
+        )
+    except (TypeError, ImportError):
+        # Fallback to direct list (older RAGAS versions)
+        try:
+            results = evaluate(
+                [sample],
+                metrics=metrics,
+            )
+        except TypeError:
+            # Last resort - try with samples kwarg
+            results = evaluate(
+                samples=[sample],
+                metrics=metrics,
+            )
 
     # TODO: Return the evaluation results
     return results.to_pandas().iloc[0].to_dict()

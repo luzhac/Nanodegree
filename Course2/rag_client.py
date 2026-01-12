@@ -1,5 +1,7 @@
 import chromadb
+import os
 from chromadb.config import Settings
+from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 from typing import Dict, List, Optional
 from pathlib import Path
 
@@ -77,8 +79,20 @@ def initialize_rag_system(chroma_dir: str, collection_name: str):
             settings=Settings(anonymized_telemetry=False)
         )
 
+        api_key = os.getenv("CHROMA_OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            return None, False, "OpenAI API key not found for embeddings."
+
+        embedding_function = OpenAIEmbeddingFunction(
+            api_key=api_key,
+            model_name="text-embedding-3-small",
+        )
+
         # Get or create collection
-        collection = client.get_or_create_collection(collection_name)
+        collection = client.get_or_create_collection(
+            collection_name,
+            embedding_function=embedding_function,
+        )
 
         return collection, True, None
 
