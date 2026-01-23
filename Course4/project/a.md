@@ -1,5 +1,5 @@
 ```mermaid
-flowchart TD
+flowchart T D
     U[Customer text request] --> O[OrchestratorAgent: classify intent & route]
 
     O -->|Inventory question| IA[InventoryAgent]
