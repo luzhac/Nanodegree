@@ -1,0 +1,8 @@
+ragas
+chromadb
+openai
+streamlit
+rouge_score
+sacrebleu
+rapidfuzz
+langchain_openai
